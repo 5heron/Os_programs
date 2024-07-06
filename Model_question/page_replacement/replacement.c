@@ -159,7 +159,7 @@ void optimal(int reference_array[], int no_of_references, int no_of_frames) {
           for(int j = i; j < no_of_references; j++){
             //first occurence of page in reference string
             if(frame[frame_index] == reference_array[j]){
-              time[frame[frame_index]] = i;
+              time[frame[frame_index]] = j;
               flag = 1;
               break;
             }
@@ -242,3 +242,4 @@ int main() {
   } while (choice != 5);
   return 0;
 }
+//20 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1 3 4
