@@ -91,7 +91,7 @@ void lru(int reference_array[], int no_of_references, int no_of_frames) {
 }
 void lfu(int reference_array[], int no_of_references, int no_of_frames) {
   //Initialise no of missese ,no of allocated frames
-  int no_of_miss = 0, no_of_allocatedframes = 0, loc, min, i, frame_index;
+  int no_of_miss = 0, no_of_allocatedframes = 0, loc, min, i, frame_index, first_in = 0;
   //Go through the reference string
   for (i = 0; i < no_of_references; i++) {
     count[reference_array[i]]++;
@@ -106,9 +106,9 @@ void lfu(int reference_array[], int no_of_references, int no_of_frames) {
         //Take out page least frequently used i.e with least count of reference(count[] minimum)
         //Finding minimum logic
         //Assume frame at 0 index is minimum 
-        loc = 0;
-        min = count[frame[0]];
-        for (frame_index = 1; frame_index < no_of_frames; frame_index++) {
+        loc = first_in;
+        min = count[frame[loc]];
+        for (frame_index = loc; frame_index < no_of_frames; frame_index++) {
           //There's is a new short king !
           if ((count[frame[frame_index]]) < min) {
             //update min and strore it's location
@@ -119,6 +119,7 @@ void lfu(int reference_array[], int no_of_references, int no_of_frames) {
         //Voila! we found our siddharth/short king
         //Take it out of frame
         inframe[frame[loc]] = 0;
+        first_in = (first_in + 1) % no_of_frames;
         //Add the new page
         frame[loc] = reference_array[i];
       }
@@ -243,3 +244,4 @@ int main() {
   return 0;
 }
 //20 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1 3 4
+//16 7 0 2 4 3 1 4 7 2 0 4 3 0 3 2 7 3 3
