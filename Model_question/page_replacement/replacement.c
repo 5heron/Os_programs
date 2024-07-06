@@ -108,18 +108,21 @@ void lfu(int reference_array[], int no_of_references, int no_of_frames) {
         //Assume frame at 0 index is minimum 
         loc = first_in;
         min = count[frame[loc]];
-        for (frame_index = loc; frame_index < no_of_frames; frame_index++) {
+        frame_index = loc;
+        for (int i = 0; i < no_of_frames; i++) {
           //There's is a new short king !
           if ((count[frame[frame_index]]) < min) {
             //update min and strore it's location
             min = count[frame[frame_index]];
             loc = frame_index;
           }
+          frame_index = (frame_index + 1) % no_of_frames;
         }
         //Voila! we found our siddharth/short king
         //Take it out of frame
         inframe[frame[loc]] = 0;
-        first_in = (first_in + 1) % no_of_frames;
+        if(first_in == loc)
+          first_in = ((first_in + 1) % no_of_frames);
         //Add the new page
         frame[loc] = reference_array[i];
       }
