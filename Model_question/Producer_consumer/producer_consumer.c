@@ -8,7 +8,7 @@ void *producer(void *arg)
 {
     do
     {
-        //wait till buffer slot is full
+        //wait till buffer slot is empty
         sem_wait(&empty);
         //wait to acquire mutex(semaphore) lock
         sem_wait(&mutex);
@@ -19,7 +19,7 @@ void *producer(void *arg)
         put++;
         //release the mutex(semaphore) lock
         sem_post(&mutex);
-        //release the empty buffer
+        //release the full buffer
         sem_post(&full);
         sleep(3);
     }
