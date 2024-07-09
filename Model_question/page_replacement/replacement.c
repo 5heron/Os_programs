@@ -97,6 +97,7 @@ void lfu(int reference_array[], int no_of_references, int no_of_frames) {
     count[reference_array[i]]++;
     //If PAGEi referenced is not in a frame 
     if (inframe[reference_array[i]] == 0) {
+      time[reference_array[i]] = i;
       if (no_of_allocatedframes < no_of_frames)
         //If there are free frames allocate referenced PAGE in reference_array to free frame
         frame[no_of_allocatedframes++] = reference_array[i];
@@ -104,25 +105,35 @@ void lfu(int reference_array[], int no_of_references, int no_of_frames) {
       else {
         //If there are no free frames
         //Take out page least frequently used i.e with least count of reference(count[] minimum)
+        //sort based on time
+        for (int i = 0; i < no_of_frames - 1; i++)
+        {
+          for (int j = 0; j < no_of_frames - 1; j++)
+          {
+            if (time[frame[j]] > time[frame[j + 1]])
+            {
+              int temp = frame[j];
+              frame[j] = frame[j + 1];
+              frame[j + 1] = temp;
+            }
+          }
+        }
         //Finding minimum logic
         //Assume frame at 0 index is minimum 
-        loc = first_in;
-        min = count[frame[loc]];
-        frame_index = loc;
-        for (int i = 0; i < no_of_frames; i++) {
+        loc = 0;
+        min = count[frame[0]];
+        for (frame_index = 1; frame_index < no_of_frames; frame_index++) {
           //There's is a new short king !
           if ((count[frame[frame_index]]) < min) {
             //update min and strore it's location
             min = count[frame[frame_index]];
             loc = frame_index;
           }
-          frame_index = (frame_index + 1) % no_of_frames;
         }
         //Voila! we found our siddharth/short king
         //Take it out of frame
         inframe[frame[loc]] = 0;
-        if(first_in == loc)
-          first_in = ((first_in + 1) % no_of_frames);
+        count[frame[loc]] = 0;
         //Add the new page
         frame[loc] = reference_array[i];
       }
