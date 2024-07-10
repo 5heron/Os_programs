@@ -1,47 +1,32 @@
 #include <stdio.h>
 #define MAX 300
 //based on srtf
-int queue[MAX], front = -1, rear = -1;
-
+int front = -1, rear = -1;
 typedef struct process {
   int arrival_time, burst_time, completion_time, turn_around_time, waiting_time,
-      remaining_burst, pid, priority;
+      remaining_burst, pid, priority, ind;
 } process_t;
 
-void enqueue(int item) {
+process_t queue[MAX];
+
+void enqueue(process_t item)
+{
   if (front == -1)
     front = 0;
   queue[++rear] = item;
 }
-//least priority number == highest priority job
-int dequeuemin(process_t *processes) {
-  int loc = front, pid = -1;
-  if (front != -1) {
-    // Assume first process as the highest priority job
-    pid = queue[front];
-    for (int i = front; i <= rear; i++) {
-      if (processes[pid].priority >
-          processes[queue[i]].priority) {
-        // If the job at queue[i] has highest priority
-        // hpj = queue[i]
-        pid = queue[i];
-        loc = i;
-      }
-    }
-    // pid holds the hpj & loc holds it's location in queue[]
-    if (loc != front) {
-      // Swap the current queue[front] with the srtj
-      queue[loc] = queue[front];
-      queue[front] = pid;
-    }
-    // dequeue()
-    pid = queue[front];
-    if (front == rear)
-      front = rear = -1;
-    else
-      front = front + 1;
+
+void enqueue_front(process_t item)
+{
+  if (front == -1)
+    front = rear = 0;
+  else
+  {
+    for (int i = rear; i >= front; i--)
+      queue[i + 1] = queue[i];
+    rear++;
   }
-  return pid;
+  queue[front] = item;
 }
 
 void sort_processes(process_t *processes, int num_of_processes) {
@@ -60,30 +45,70 @@ void sort_processes(process_t *processes, int num_of_processes) {
   }
 }
 
+//least priority number == highest priority job
+process_t dequeuemin() {
+  int loc = front;
+  process_t proc;
+  if (front != -1) {
+    //sort based on arrival time
+    if(front > 0)
+      sort_processes(queue, rear - front + 1);
+    // Assume first process as the highest priority job
+    proc = queue[front];
+    for (int i = front; i <= rear; i++) {
+      if (proc.priority > queue[i].priority) {
+        // If the job at queue[i] has highest priority
+        // hpj = queue[i]
+        proc = queue[i];
+        loc = i;
+      }
+    }
+    // pid holds the hpj & loc holds it's location in queue[]
+    if (loc != front) {
+      // Swap the current queue[front] with the hpj
+      queue[loc] = queue[front];
+      queue[front] = proc;
+    }
+    // dequeue()
+    proc = queue[front];
+    if (front == rear)
+      front = rear = -1;
+    else{
+      for (int i = front; i <= rear; i++)
+        queue[i] = queue[i + 1];
+      rear--;
+    }
+  }
+  return proc;
+}
+
 void round_robin(process_t *processes, int num_of_processes) {
   int cpu_time = 0, time_unit = 1;
   process_t idle, gantt[MAX];
   idle.burst_time = 0;
 
-  int i = 0, preemp_proc = -1, g_index = 0;
-
+  int i = 0, g_index = 0;
+  process_t preemp_proc;
+  //Need index of each process in processes[]
+  for(int i = 0; i < num_of_processes; i++)
+    processes[i].ind = i;
   while (front > -1 || i < num_of_processes) {
     // !queue.is_empty() || not allocated for all processes.
     while (i < num_of_processes && processes[i].arrival_time <= cpu_time) {
       // arrived processes
-      enqueue(i);
+      enqueue(processes[i]);
       i++;
     }
 
     if (front >= 0) {
-      preemp_proc = dequeuemin(processes);
+      preemp_proc = dequeuemin();
       cpu_time += time_unit;
-      processes[preemp_proc].completion_time = cpu_time;
-      gantt[g_index++] = processes[preemp_proc];
-      processes[preemp_proc].remaining_burst -= time_unit;
-      if (preemp_proc != -1 && processes[preemp_proc].remaining_burst != 0)
+      processes[preemp_proc.ind].completion_time = cpu_time;
+      gantt[g_index++] = processes[preemp_proc.ind];
+      processes[preemp_proc.ind].remaining_burst -= time_unit;
+      if (processes[preemp_proc.ind].remaining_burst != 0)
         // add the preempted process back to the ready queue
-        enqueue(preemp_proc);
+        enqueue_front(processes[preemp_proc.ind]);
     } else {
       gantt[g_index] = idle;
       gantt[g_index++].completion_time = cpu_time = processes[i].arrival_time;
@@ -113,16 +138,16 @@ void round_robin(process_t *processes, int num_of_processes) {
   }
   printf("%2d\t", gantt[i].completion_time);
   printf("\nTable :\n");
-  printf(" _________________________________\n");
-  printf("|Process| AT | BT | CT | TT | WT |\n");
-  printf("|--------------------------------|\n");
+  printf(" _____________________________________\n");
+  printf("|Process| AT | BT | PT | CT | TT | WT |\n");
+  printf("|-------|----|----|----|----|----|----|\n");
   for (i = 0; i < num_of_processes; i++) {
-    printf("|p%d \t| %2d | %2d | %2d | %2d | %2d |\n", processes[i].pid,
-           processes[i].arrival_time, processes[i].burst_time,
+    printf("|p%d \t| %2d | %2d | %2d | %2d | %2d | %2d |\n", processes[i].pid,
+           processes[i].arrival_time, processes[i].burst_time, processes[i].priority,
            processes[i].completion_time, processes[i].turn_around_time,
            processes[i].waiting_time);
   }
-  printf(" _________________________________\n");
+  printf("|_______|____|____|____|____|____|____|\n");
   twt = twt / num_of_processes;
   tat = tat / num_of_processes;
   printf("\nAverage WT:%f\n", twt);
@@ -135,15 +160,15 @@ int main() {
   printf("Enter the number of processes: ");
   scanf("%d", &num_of_processes);
   for (int i = 0; i < num_of_processes; i++) {
-    printf("Enter Arrival time ,Burst Time, Priority of process %d: \n", i + 1);
-    scanf("%d%d%d", &processes[i].arrival_time, &processes[i].burst_time, &processes[i].priority);
+    printf("Enter Priority, Arrival time ,Burst Time of process %d: \n", i + 1);
+    scanf("%d%d%d", &processes[i].priority, &processes[i].arrival_time, &processes[i].burst_time);
     processes[i].pid = i + 1;
     // rbt = bt
     processes[i].remaining_burst = processes[i].burst_time;
   }
   // sort process based on arrival time
   sort_processes(processes, num_of_processes);
-
   round_robin(processes, num_of_processes);
   return 0;
 }
+//5 3 0 3 3 1 4 4 2 6 6 3 4 10 5 2
