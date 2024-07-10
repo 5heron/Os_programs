@@ -26,11 +26,11 @@ void display(struct mem memory_blocks[], int number_of_blocks) {
 }
 
 void firstfit(struct mem memory_blocks[], int number_of_blocks, int process_blocks[], int number_of_processes) {
-  int i, j, number_of_allocatedp = 0, flag;
+  int i, j, flag;
   printf("Unallocated processes : ");
   for (i = 0; i < number_of_processes; i++) {
     flag = 0;
-    for (j = number_of_allocatedp; j < number_of_blocks; j++) {
+    for (j = 0; j < number_of_blocks; j++) {
       if (memory_blocks[j].size >= process_blocks[i] && memory_blocks[j].isAlloc == 0) {
         memory_blocks[j].frag = memory_blocks[j].size - process_blocks[i];
         memory_blocks[j].pId = i;
