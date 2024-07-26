@@ -49,7 +49,7 @@ void round_robin(process_t *processes, int num_of_processes, int time_quantum) {
 
   int i = 0, preemp_proc = -1, g_index = 0;
 
-  while (front > -1 || i < num_of_processes) {
+  while (front > -1 || i < num_of_processes || (preemp_proc != -1 && processes[preemp_proc].remaining_burst != 0)) {
     // queue is not || all process are not allocated once.
     while (i < num_of_processes && processes[i].arrival_time <= cpu_time) {
       // arrived processes
